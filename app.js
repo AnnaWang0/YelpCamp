@@ -3,6 +3,7 @@ import { mongoose } from "mongoose";
 import methodOverride from "method-override";
 import ejsMate from "ejs-mate";
 import catchAsync from "./utils/catchAsync.js";
+import expressError from "./utils/ExpressError.js";
 import path from "path";
 import Campground from "./models/campground.js";
 
@@ -75,8 +76,14 @@ app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
     res.redirect('/campgrounds');
 }));
 
+app.all('*', (req, res, next) => {
+    next(new expressError('Page Not Found', 404));
+})
+
 app.use((err, req, res, next) => {
-    res.send('Oh boy, something went wrong!');
+    const { statusCode = 500 } = err;
+    if (!err.message) err.message = 'Something Went Wrong';
+    res.status(statusCode).render('error', { err });
 });
 
 app.listen(3000, () => {
